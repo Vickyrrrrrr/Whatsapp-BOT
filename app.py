@@ -3,6 +3,7 @@ import json
 from flask import Flask, request, Response
 from twilio.twiml.messaging_response import MessagingResponse
 from dotenv import load_dotenv
+import google.generativeai as genai
 
 load_dotenv()
 
@@ -10,6 +11,14 @@ BASE_DIR = os.path.dirname(__file__)
 DATA_PATH = os.path.join(BASE_DIR, 'data', 'college_info.json')
 
 app = Flask(__name__)
+
+# Configure Gemini AI
+GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY')
+if GEMINI_API_KEY:
+    genai.configure(api_key=GEMINI_API_KEY)
+    model = genai.GenerativeModel('gemini-pro')
+else:
+    model = None
 
 # --- Helpers ---
 
@@ -80,7 +89,30 @@ def build_reply(text, data):
         lines = [f"{m['date']} - {m['title']}" for m in matches[:5]]
         return "I found these notices:\n" + "\n".join(lines)
 
-    return "Sorry, I didn't understand. Send 'help' for commands."
+    # Use Gemini AI for general questions
+    if model and len(text) > 3:
+        try:
+            # Build context from college data
+            context = f"""You are a helpful assistant for University of Lucknow students. 
+Here's the current college information:
+
+Recent Notices:
+{chr(10).join([f"- {n['title']} ({n['date']}): {n.get('content', '')}" for n in data.get('notices', [])[:3]])}
+
+Upcoming Events:
+{chr(10).join([f"- {e['title']} on {e['date']} at {e.get('location', 'TBA')}" for e in data.get('events', [])[:3]])}
+
+Answer the student's question briefly and helpfully. If it's about admissions, exams, or college-specific info you don't have, suggest they check the official university website or contact the registrar."""
+            
+            prompt = f"{context}\n\nStudent question: {text}\n\nAnswer:"
+            response = model.generate_content(prompt)
+            if response.text:
+                return response.text.strip()[:1000]  # Limit to 1000 chars for SMS
+        except Exception as e:
+            # Fall through to default message if Gemini fails
+            pass
+
+    return "Sorry, I didn't understand. Send 'help' for commands or ask a question about University of Lucknow!"
 
 
 # --- Flask webhook ---

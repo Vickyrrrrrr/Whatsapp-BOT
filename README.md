@@ -2,8 +2,11 @@
 
 This project is a scaffold for a WhatsApp chatbot that helps University of Lucknow students get the latest college information (notices, events, contacts, timetable, etc.). It uses Twilio's WhatsApp API for messaging and a small Flask webhook to respond.
 
+**✨ NEW: Now powered by Google Gemini AI!** Students can ask any question and get intelligent answers.
+
 Features
 - Responds to commands: `help`, `notices`, `events`, `contacts`, `timetable`, `latest <keyword>`
+- **🤖 AI-powered responses** for general questions using Google Gemini
 - Local JSON data store (`data/college_info.json`) which can be updated by an admin script
 - Instructions for Twilio setup and local testing using ngrok
 - Simple unit test for message parsing
