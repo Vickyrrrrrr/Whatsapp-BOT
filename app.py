@@ -15,9 +15,12 @@ app = Flask(__name__)
 # Configure Gemini AI
 GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY')
 if GEMINI_API_KEY:
+    print(f"✅ Gemini API Key loaded (starts with: {GEMINI_API_KEY[:10]}...)")
     genai.configure(api_key=GEMINI_API_KEY)
     model = genai.GenerativeModel('gemini-2.5-flash')
+    print("✅ Gemini model initialized successfully")
 else:
+    print("⚠️ GEMINI_API_KEY not found in environment variables")
     model = None
 
 # --- Helpers ---
@@ -92,6 +95,7 @@ def build_reply(text, data):
     # Use Gemini AI for general questions
     if model and len(text) > 3:
         try:
+            print(f"🤖 Using Gemini AI for question: {text[:50]}...")
             # Build context from college data
             context = f"""You are a helpful assistant for University of Lucknow students. 
 Here's the current college information:
@@ -107,10 +111,16 @@ Answer the student's question briefly and helpfully. If it's about admissions, e
             prompt = f"{context}\n\nStudent question: {text}\n\nAnswer:"
             response = model.generate_content(prompt)
             if response.text:
+                print(f"✅ Gemini response received: {response.text[:100]}...")
                 return response.text.strip()[:1000]  # Limit to 1000 chars for SMS
-        except Exception as e:
+        except Exception as ex:
+            print(f"❌ Gemini error: {ex}")
             # Fall through to default message if Gemini fails
             pass
+    elif not model:
+        print("⚠️ Gemini model not initialized - API key missing")
+    else:
+        print(f"⚠️ Question too short for Gemini: {text}")
 
     return "Sorry, I didn't understand. Send 'help' for commands or ask a question about University of Lucknow!"
 
