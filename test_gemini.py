@@ -23,7 +23,7 @@ print("🧪 Testing Gemini AI...\n")
 
 try:
     genai.configure(api_key=GEMINI_API_KEY)
-    model = genai.GenerativeModel('gemini-pro')
+    model = genai.GenerativeModel('gemini-2.5-flash')
     
     test_question = "What is University of Lucknow known for? Answer in 2 sentences."
     print(f"Question: {test_question}\n")
